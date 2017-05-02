@@ -82,7 +82,7 @@ void runMeasurement(TRANSMIT_CHANNEL channel, int16_t *signal) {
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
     Error_Handler();
   }
-  HAL_DMA_Start(&hdma_tim2_up, (uint32_t) send_sequence, (uint32_t) &GPIOC->ODR,
+  HAL_DMA_Start(&hdma_tim2_up, (uint32_t) send_sequence, (uint32_t) (1+(uint32_t)&CODE_M_GPIO_Port->ODR),
                 sizeof send_sequence / sizeof send_sequence[0]);
   HAL_ADC_Start_DMA(&hadc1, (uint32_t *) signal, SAMPLES);
   HAL_TIM_Base_Start(&htim1);
