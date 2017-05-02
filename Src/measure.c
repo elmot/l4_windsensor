@@ -2,6 +2,7 @@
 // Created by elmot on 7/5/16.
 //
 
+#include <stm32l4xx_hal.h>
 #include "windsounder.h"
 
 /*
@@ -41,7 +42,7 @@ static const uint16_t send_pattern[] = {
 #define send_sequence send_pattern
 
 
-void runMeasurement(uint8_t transmitValue, uint32_t detectChannel, int16_t *signal) {
+void runMeasurement(TRANSMIT_CHANNEL channel, int16_t *signal) {
 
 /*
   static uint8_t send_sequence[sizeof send_pattern];
@@ -54,7 +55,25 @@ void runMeasurement(uint8_t transmitValue, uint32_t detectChannel, int16_t *sign
 
   /**Configure Regular Channel
   */
-  sConfig.Channel = detectChannel;
+  HAL_GPIO_WritePin(EN_A_GPIO_Port, EN_A_Pin | EN_B_Pin | EN_C_Pin | EN_D_Pin, GPIO_PIN_RESET);
+  switch (channel) {
+    case CH_A:
+      sConfig.Channel = ADC_CHANNEL_8;
+      HAL_GPIO_WritePin(EN_A_GPIO_Port, EN_A_Pin, GPIO_PIN_SET);
+      break;
+    case CH_B:
+      sConfig.Channel = ADC_CHANNEL_9;
+      HAL_GPIO_WritePin(EN_B_GPIO_Port, EN_B_Pin, GPIO_PIN_SET);
+      break;
+    case CH_C:
+      sConfig.Channel = ADC_CHANNEL_10;
+      HAL_GPIO_WritePin(EN_C_GPIO_Port, EN_C_Pin, GPIO_PIN_SET);
+      break;
+    case CH_D:
+      sConfig.Channel = ADC_CHANNEL_11;
+      HAL_GPIO_WritePin(EN_D_GPIO_Port, EN_D_Pin, GPIO_PIN_SET);
+      break;
+  }
   sConfig.Rank = 1;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLE_5;

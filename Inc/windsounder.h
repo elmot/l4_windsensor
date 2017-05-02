@@ -10,25 +10,23 @@
 #include <math.h>
 #include "stm32l4xx_hal.h"
 
-#define TRANSMIT_VALUE_1 0x10
-#define TRANSMIT_VALUE_2 0x20
-#define TRANSMIT_VALUE_3 0x40
-
-#define DETECT_CH_1 ADC_CHANNEL_1
-#define DETECT_CH_2 ADC_CHANNEL_2
-#define DETECT_CH_3 ADC_CHANNEL_6
-
 #define SAMPLES 5000
 #define MEASURABLE_HEAD 1400
 #define MEASURABLE_TAIL 200
 #define MEASURABLE (MEASURABLE_HEAD + MEASURABLE_TAIL)
 #define MAX_FIND_RANGE 150
 
+typedef enum {
+    CH_A,
+    CH_B,
+    CH_C,
+    CH_D
+} TRANSMIT_CHANNEL ;
 typedef struct {
     uint8_t data[MEASURABLE];
 } SIGNAL;
 
-void runMeasurement(uint8_t transmitValue, uint32_t detectChannel, short *signal);
+void runMeasurement(TRANSMIT_CHANNEL channel, short *signal);
 
 void normalizeTo(SIGNAL *signal, int16_t pInt[3000]);
 
