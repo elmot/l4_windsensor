@@ -16,6 +16,7 @@ include_directories(Inc Drivers/STM32L4xx_HAL_Driver/Inc)
 include_directories(Drivers/CMSIS/Include)
 include_directories(Drivers/CMSIS/DSP_Lib/Include)
 include_directories(Drivers/CMSIS/Device/ST/STM32L4xx/Include)
+include_directories(SVD_Inc)
 
 add_executable(${PROJECT_NAME}.elf ${USER_SOURCES} ${STD_SOURCES})
 

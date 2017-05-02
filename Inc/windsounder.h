@@ -9,6 +9,13 @@
 #include <stdint.h>
 #include <math.h>
 #include "stm32l4xx_hal.h"
+#include "ADC.h"
+#include "TIM1.h"
+#include "TIM2.h"
+#include "DMA1.h"
+#include "DMA2.h"
+#include "GPIOA.h"
+#include "GPIOB.h"
 
 #define SAMPLES 5000
 #define MEASURABLE_HEAD 1400
