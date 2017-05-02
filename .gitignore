@@ -1,1 +1,7 @@
-# Created by .ignore support plugin (hsz.mobi)
+# IntelliJ project files
+.idea
+*.iml
+# Useless eclipse project
+.project
+# Buid directory
+/cmake-build-debug
