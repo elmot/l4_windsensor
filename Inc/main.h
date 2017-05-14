@@ -43,24 +43,24 @@
 
 #define MCO_Pin GPIO_PIN_0
 #define MCO_GPIO_Port GPIOA
+#define CODE_P_Pin GPIO_PIN_1
+#define CODE_P_GPIO_Port GPIOA
 #define VCP_TX_Pin GPIO_PIN_2
 #define VCP_TX_GPIO_Port GPIOA
-#define IN_A_Pin GPIO_PIN_3
-#define IN_A_GPIO_Port GPIOA
-#define IN_B_Pin GPIO_PIN_4
-#define IN_B_GPIO_Port GPIOA
+#define IN_D_Pin GPIO_PIN_4
+#define IN_D_GPIO_Port GPIOA
 #define IN_C_Pin GPIO_PIN_5
 #define IN_C_GPIO_Port GPIOA
-#define IN_D_Pin GPIO_PIN_6
-#define IN_D_GPIO_Port GPIOA
+#define IN_B_Pin GPIO_PIN_6
+#define IN_B_GPIO_Port GPIOA
+#define IN_A_Pin GPIO_PIN_7
+#define IN_A_GPIO_Port GPIOA
 #define EN_A_Pin GPIO_PIN_0
 #define EN_A_GPIO_Port GPIOB
-#define EN_B_Pin GPIO_PIN_1
-#define EN_B_GPIO_Port GPIOB
-#define CODE_M_Pin GPIO_PIN_8
+#define EN_D_Pin GPIO_PIN_1
+#define EN_D_GPIO_Port GPIOB
+#define CODE_M_Pin GPIO_PIN_12
 #define CODE_M_GPIO_Port GPIOA
-#define CODE_P_Pin GPIO_PIN_9
-#define CODE_P_GPIO_Port GPIOA
 #define SWDIO_Pin GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
 #define SWCLK_Pin GPIO_PIN_14
@@ -69,10 +69,14 @@
 #define VCP_RX_GPIO_Port GPIOA
 #define LD3_Pin GPIO_PIN_3
 #define LD3_GPIO_Port GPIOB
-#define EN_C_Pin GPIO_PIN_4
+#define CALIBR_OUT_Pin GPIO_PIN_4
+#define CALIBR_OUT_GPIO_Port GPIOB
+#define CALIBR_IN_Pin GPIO_PIN_5
+#define CALIBR_IN_GPIO_Port GPIOB
+#define EN_C_Pin GPIO_PIN_6
 #define EN_C_GPIO_Port GPIOB
-#define EN_D_Pin GPIO_PIN_5
-#define EN_D_GPIO_Port GPIOB
+#define EN_B_Pin GPIO_PIN_7
+#define EN_B_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
