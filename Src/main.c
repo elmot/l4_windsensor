@@ -43,6 +43,7 @@
 #include <windsounder.h>
 #include <string.h>
 #include <stdlib.h>
+#include <arm_math.h>
 
 /* USER CODE END Includes */
 
@@ -82,6 +83,30 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN 0 */
 
 void uartTransmit(const char *str) { HAL_UART_Transmit(&huart2, (uint8_t *) str, strlen(str), 20000); }
+
+void oneTrip(char *name, TRANSMIT_CHANNEL channel) {
+  runMeasurement(channel, values);
+  int16_t* vRange = &values[3200];
+  size_t vLength =3000;
+  int16_t avg;
+  arm_mean_q15(values, SAMPLES, &avg);
+  //todo cut
+  //todo -avg
+  // todo filter
+  // todo convert to byte
+  // todo normalize
+  HAL_Delay(100);
+  uartTransmit("START\r\n");
+  uartTransmit(name);
+  for (int i = 0; i < vLength; i++) {
+    char buf[50];
+    itoa(vRange[i], buf, 10);
+    uartTransmit("\r\n");
+    uartTransmit(buf);
+  }
+  uartTransmit("\r\nEND\r\n");
+}
+
 
 /* USER CODE END 0 */
 
@@ -136,17 +161,11 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-    runMeasurement(CH_DC, values);
-//    HAL_Delay(200);
-    uartTransmit("START\r\n");
-    uartTransmit("CH_A");
-    for(int  i = 0; i < SAMPLES; i++) {
-      char buf [50];
-      itoa(values[i],buf,10);
-      uartTransmit("\r\n");
-      uartTransmit(buf);
-    }
-    uartTransmit("\r\nEND\r\n");
+    oneTrip("CH_AB", CH_AB);
+    oneTrip("CH_BA", CH_BA);
+    oneTrip("CH_CD", CH_CD);
+    oneTrip("CH_DC", CH_DC);
+    HAL_Delay(300);
 
   }
 #pragma clang diagnostic pop
@@ -361,7 +380,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 1152000;
+  huart2.Init.BaudRate = 230400;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
