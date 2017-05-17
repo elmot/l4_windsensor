@@ -3,6 +3,11 @@
   * File Name          : main.c
   * Description        : Main program body
   ******************************************************************************
+  ** This notice applies to any and all portions of this file
+  * that are not between comment pairs USER CODE BEGIN and
+  * USER CODE END. Other portions of this file, whether 
+  * inserted by the user or by software development tools
+  * are owned by their respective copyright owners.
   *
   * COPYRIGHT(c) 2017 STMicroelectronics
   *
@@ -36,6 +41,8 @@
 
 /* USER CODE BEGIN Includes */
 #include <windsounder.h>
+#include <string.h>
+#include <stdlib.h>
 
 /* USER CODE END Includes */
 
@@ -59,7 +66,6 @@ int16_t values[SAMPLES];
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-void Error_Handler(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
@@ -75,6 +81,8 @@ static void MX_USART1_UART_Init(void);
 
 /* USER CODE BEGIN 0 */
 
+void uartTransmit(const char *str) { HAL_UART_Transmit(&huart2, (uint8_t *) str, strlen(str), 20000); }
+
 /* USER CODE END 0 */
 
 int main(void)
@@ -89,8 +97,16 @@ int main(void)
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
   /* Configure the system clock */
   SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
@@ -120,20 +136,24 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-    runMeasurement(CH_A, values);
-    HAL_Delay(200);
-    runMeasurement(CH_B, values);
-    HAL_Delay(200);
-    runMeasurement(CH_C, values);
-    HAL_Delay(200);
-    runMeasurement(CH_D, values);
-    HAL_Delay(200);
+    runMeasurement(CH_DC, values);
+//    HAL_Delay(200);
+    uartTransmit("START\r\n");
+    uartTransmit("CH_A");
+    for(int  i = 0; i < SAMPLES; i++) {
+      char buf [50];
+      itoa(values[i],buf,10);
+      uartTransmit("\r\n");
+      uartTransmit(buf);
+    }
+    uartTransmit("\r\nEND\r\n");
 
   }
 #pragma clang diagnostic pop
   /* USER CODE END 3 */
 
 }
+
 
 /** System Clock Configuration
 */
@@ -157,7 +177,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
     /**Initializes the CPU, AHB and APB busses clocks 
@@ -171,7 +191,7 @@ void SystemClock_Config(void)
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART2
@@ -181,14 +201,14 @@ void SystemClock_Config(void)
   PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_SYSCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
     /**Configure the main internal regulator output voltage 
     */
   if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
     /**Configure the Systick interrupt time 
@@ -229,7 +249,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.OversamplingMode = DISABLE;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
     /**Configure Regular Channel 
@@ -242,7 +262,7 @@ static void MX_ADC1_Init(void)
   sConfig.Offset = 0;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
 }
@@ -262,13 +282,13 @@ static void MX_TIM1_Init(void)
   htim1.Init.RepetitionCounter = 0;
   if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
   if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
@@ -276,7 +296,7 @@ static void MX_TIM1_Init(void)
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_ENABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
 }
@@ -295,21 +315,21 @@ static void MX_TIM2_Init(void)
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
   sSlaveConfig.SlaveMode = TIM_SLAVEMODE_EXTERNAL1;
   sSlaveConfig.InputTrigger = TIM_TS_ITR0;
   if (HAL_TIM_SlaveConfigSynchronization(&htim2, &sSlaveConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
 }
@@ -331,7 +351,7 @@ static void MX_USART1_UART_Init(void)
   huart1.AdvancedInit.Swap = UART_ADVFEATURE_SWAP_ENABLE;
   if (HAL_HalfDuplex_Init(&huart1) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
 }
@@ -341,7 +361,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 1152000;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -352,7 +372,7 @@ static void MX_USART2_UART_Init(void)
   huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
   if (HAL_UART_Init(&huart2) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
 }
@@ -452,17 +472,14 @@ static void MX_GPIO_Init(void)
   * @param  None
   * @retval None
   */
-void Error_Handler(void)
+void _Error_Handler(char * file, int line)
 {
-  /* USER CODE BEGIN Error_Handler */
+  /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
-  while(1)
+  while(1) 
   {
   }
-#pragma clang diagnostic pop
-  /* USER CODE END Error_Handler */ 
+  /* USER CODE END Error_Handler_Debug */ 
 }
 
 #ifdef USE_FULL_ASSERT

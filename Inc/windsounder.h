@@ -24,10 +24,10 @@
 #define MAX_FIND_RANGE 150
 
 typedef enum {
-    CH_A,
-    CH_B,
-    CH_C,
-    CH_D
+    CH_AB,
+    CH_BA,
+    CH_CD,
+    CH_DC
 } TRANSMIT_CHANNEL ;
 typedef struct {
     uint8_t data[MEASURABLE];

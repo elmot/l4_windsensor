@@ -29,7 +29,6 @@ extern DMA_HandleTypeDef hdma_adc1;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
 
-void Error_Handler(void);
 
 #define PH_A CODE_P_Pin
 #define PH_B CODE_M_Pin
@@ -53,20 +52,20 @@ void runMeasurement(TRANSMIT_CHANNEL channel, int16_t *signal) {
   */
   HAL_GPIO_WritePin(EN_A_GPIO_Port, EN_A_Pin | EN_B_Pin | EN_C_Pin | EN_D_Pin, GPIO_PIN_RESET);
   switch (channel) {
-    case CH_A:
-      sConfig.Channel = ADC_CHANNEL_12;
+    case CH_AB:
+      sConfig.Channel = ADC_CHANNEL_11;
       HAL_GPIO_WritePin(EN_A_GPIO_Port, EN_A_Pin, GPIO_PIN_SET);
       break;
-    case CH_B:
-      sConfig.Channel = ADC_CHANNEL_11;
+    case CH_BA:
+      sConfig.Channel = ADC_CHANNEL_12;
       HAL_GPIO_WritePin(EN_B_GPIO_Port, EN_B_Pin, GPIO_PIN_SET);
       break;
-    case CH_C:
-      sConfig.Channel = ADC_CHANNEL_10;
+    case CH_CD:
+      sConfig.Channel = ADC_CHANNEL_9;
       HAL_GPIO_WritePin(EN_C_GPIO_Port, EN_C_Pin, GPIO_PIN_SET);
       break;
-    case CH_D:
-      sConfig.Channel = ADC_CHANNEL_9;
+    case CH_DC:
+      sConfig.Channel = ADC_CHANNEL_10;
       HAL_GPIO_WritePin(EN_D_GPIO_Port, EN_D_Pin, GPIO_PIN_SET);
       break;
   }
