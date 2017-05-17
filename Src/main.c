@@ -88,13 +88,18 @@ void oneTrip(char *name, TRANSMIT_CHANNEL channel) {
   runMeasurement(channel, values);
   int16_t* vRange = &values[3200];
   size_t vLength =3000;
+  int16_t outRange[3000];
+
   int16_t avg;
-  arm_mean_q15(values, SAMPLES, &avg);
-  //todo cut
-  //todo -avg
+  arm_mean_q15(vRange, vLength, &avg);
+  arm_offset_q15(vRange, -avg, outRange, vLength);
+  q63_t var;
+  q31_t var1;
+  arm_dot_prod_q15(outRange, outRange, vLength, &var);
+  arm_sqrt_q31(var >> 16, &var1);
+  // todo normalize
   // todo filter
   // todo convert to byte
-  // todo normalize
   HAL_Delay(100);
   uartTransmit("START\r\n");
   uartTransmit(name);
@@ -172,7 +177,6 @@ int main(void)
   /* USER CODE END 3 */
 
 }
-
 
 /** System Clock Configuration
 */

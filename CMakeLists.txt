@@ -3,13 +3,17 @@ project(l4_windsensor C ASM)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_definitions(-DSTM32L432xx -DARM_MATH_CM4 -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING -DUNALIGNED_SUPPORT_DISABLE -DUSE_HAL)
+add_definitions(-DSTM32L432xx -DARM_MATH_CM4 -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING -DUNALIGNED_SUPPORT_DISABLE -DUSE_HAL -D__FPU_PRESENT=1 )
 
 file(GLOB_RECURSE USER_SOURCES "Src/*.c" "Inc/*.h")
 file(GLOB_RECURSE STD_SOURCES
         "Drivers/**/*.h"
         "Drivers/**/*.c"
-        "startup/*.s")
+        "startup/*.s"
+        "DSP_Lib/Source/BasicMathFunctions/*.c"
+        "DSP_Lib/Source/StatisticsFunctions/*.c"
+        "DSP_Lib/Source/FastMathFunctions/*.c"
+        )
 #file(GLOB_RECURSE DSP_SOURCES "Drivers/CMSIS/DSP_Lib/Source/*/*.c")
 
 include_directories(Inc Drivers/STM32L4xx_HAL_Driver/Inc)

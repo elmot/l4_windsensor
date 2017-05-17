@@ -1,16 +1,16 @@
 Configuration	l4-windsensor
-STM32CubeMX 	4.20.1
-Date	05/10/2017
+STM32CubeMX 	4.21.0
+Date	05/17/2017
 MCU	STM32L432KCUx
 
 
 
 PERIPHERALS	MODES	FUNCTIONS	PINS
-ADC1	IN8 Single-ended	ADC1_IN8	PA3
 ADC1	IN9 Single-ended	ADC1_IN9	PA4
 ADC1	IN10 Single-ended	ADC1_IN10	PA5
 ADC1	IN11 Single-ended	ADC1_IN11	PA6
-RCC	BYPASS Clock Source	RCC_CK_IN	PA0-CK_IN
+ADC1	IN12 Single-ended	ADC1_IN12	PA7
+RCC	BYPASS Clock Source	RCC_CK_IN	PA0
 RCC	Crystal/Ceramic Resonator	RCC_OSC32_IN	PC14-OSC32_IN (PC14)
 RCC	Crystal/Ceramic Resonator	RCC_OSC32_OUT	PC15-OSC32_OUT (PC15)
 SYS	Serial Wire	SYS_JTCK-SWCLK	PA14 (JTCK-SWCLK)
@@ -19,6 +19,7 @@ SYS	SysTick	SYS_VS_Systick	VP_SYS_VS_Systick
 TIM1	Internal Clock	TIM1_VS_ClockSourceINT	VP_TIM1_VS_ClockSourceINT
 TIM2	External Clock Mode 1	TIM2_VS_ControllerModeClock	VP_TIM2_VS_ControllerModeClock
 TIM2	ITR0	TIM2_VS_ClockSourceITR	VP_TIM2_VS_ClockSourceITR
+USART1	Single Wire (Half-Duplex)	USART1_TX	PA9
 USART2	Asynchronous	USART2_RX	PA15 (JTDI)
 USART2	Asynchronous	USART2_TX	PA2
 
@@ -27,22 +28,26 @@ USART2	Asynchronous	USART2_TX	PA2
 Pin Nb	PINs	FUNCTIONs	LABELs
 2	PC14-OSC32_IN (PC14)	RCC_OSC32_IN	
 3	PC15-OSC32_OUT (PC15)	RCC_OSC32_OUT	
-6	PA0-CK_IN	RCC_CK_IN	MCO [High speed clock in]
+6	PA0	RCC_CK_IN	MCO [High speed clock in]
+7	PA1	GPIO_Output	CODE_P
 8	PA2	USART2_TX	VCP_TX
-9	PA3	ADC1_IN8	IN_A
-10	PA4	ADC1_IN9	IN_B
+9	PA3*	LPUART1_RX	
+10	PA4	ADC1_IN9	IN_D
 11	PA5	ADC1_IN10	IN_C
-12	PA6	ADC1_IN11	IN_D
+12	PA6	ADC1_IN11	IN_B
+13	PA7	ADC1_IN12	IN_A
 14	PB0	GPIO_Output	EN_A
-15	PB1	GPIO_Output	EN_B
-18	PA8	GPIO_Output	CODE_M
-19	PA9	GPIO_Output	CODE_P
+15	PB1	GPIO_Output	EN_D
+19	PA9	USART1_TX	
+22	PA12	GPIO_Output	CODE_M
 23	PA13 (JTMS-SWDIO)	SYS_JTMS-SWDIO	SWDIO
 24	PA14 (JTCK-SWCLK)	SYS_JTCK-SWCLK	SWCLK
 25	PA15 (JTDI)	USART2_RX	VCP_RX
 26	PB3 (JTDO-TRACESWO)	GPIO_Output	LD3 [Green]
-27	PB4 (NJTRST)	GPIO_Output	EN_C
-28	PB5	GPIO_Output	EN_D
+27	PB4 (NJTRST)	GPIO_Output	CALIBR_OUT
+28	PB5	GPIO_Input	CALIBR_IN
+29	PB6	GPIO_Output	EN_C
+30	PB7	GPIO_Output	EN_B
 
 
 
@@ -52,7 +57,7 @@ Project Settings :
 Project Name : l4-windsensor
 Project Folder : /home/elmot/projects/l4-windsensor
 Toolchain / IDE : SW4STM32
-Firmware Package Name and Version : STM32Cube FW_L4 V1.7.0
+Firmware Package Name and Version : STM32Cube FW_L4 V1.8.0
 
 
 Code Generation Settings : 
