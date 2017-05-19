@@ -12,7 +12,7 @@ file(GLOB_RECURSE STD_SOURCES
         "startup/*.s"
         "DSP_Lib/Source/BasicMathFunctions/*.c"
         "DSP_Lib/Source/StatisticsFunctions/*.c"
-        "DSP_Lib/Source/FastMathFunctions/*.c"
+        "DSP_Lib/Source/FilteringFunctions/*.c"
         )
 #file(GLOB_RECURSE DSP_SOURCES "Drivers/CMSIS/DSP_Lib/Source/*/*.c")
 

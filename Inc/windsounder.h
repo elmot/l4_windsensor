@@ -17,11 +17,10 @@
 #include "GPIOA.h"
 #include "GPIOB.h"
 
-#define SAMPLES 10000
-#define MEASURABLE_HEAD 1400
-#define MEASURABLE_TAIL 200
-#define MEASURABLE (MEASURABLE_HEAD + MEASURABLE_TAIL)
-#define MAX_FIND_RANGE 150
+#define MEASURE_SKIP_HEAD 3200
+#define MEASURES 2000
+
+#define SAMPLES (MEASURES + MEASURE_SKIP_HEAD)
 
 typedef enum {
     CH_AB,
@@ -29,14 +28,7 @@ typedef enum {
     CH_CD,
     CH_DC
 } TRANSMIT_CHANNEL ;
-typedef struct {
-    uint8_t data[MEASURABLE];
-} SIGNAL;
 
 void runMeasurement(TRANSMIT_CHANNEL channel, short *signal);
-
-void normalizeTo(SIGNAL *signal, int16_t pInt[3000]);
-
-extern int findBestShift(SIGNAL * forwSignal, SIGNAL * backSignal);
 
 #endif //F3_WINDSENSOR_WINDSOUNDER_H_H

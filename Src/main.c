@@ -78,40 +78,54 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
+void transmitFrame(const char *name, const int16_t *outRange, size_t len);
+
+int findAndSendCorrelation(char *name, const int16_t *calibRangeDC, const int16_t *measureRange);
+
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
 
 void uartTransmit(const char *str) { HAL_UART_Transmit(&huart2, (uint8_t *) str, strlen(str), 20000); }
 
-void oneTrip(char *name, TRANSMIT_CHANNEL channel) {
-  runMeasurement(channel, values);
-  int16_t* vRange = &values[3200];
-  size_t vLength =3000;
-  int16_t outRange[3000];
 
-  int16_t avg;
-  arm_mean_q15(vRange, vLength, &avg);
-  arm_offset_q15(vRange, -avg, outRange, vLength);
-  q63_t var;
-  q31_t var1;
-  arm_dot_prod_q15(outRange, outRange, vLength, &var);
-  arm_sqrt_q31(var >> 16, &var1);
+void oneTrip(char *name, TRANSMIT_CHANNEL channel, int16_t outRange[]) {
+  runMeasurement(channel, values);
+  int16_t* vRange = &values[MEASURE_SKIP_HEAD];
+
+  q15_t avg;
+  arm_mean_q15(vRange, MEASURES, &avg);
+  arm_offset_q15(vRange, -avg, outRange, MEASURES);
+//  arm_scale_q15(out1Range, avg2 * 3, 0, out2Range, vLength);
   // todo normalize
   // todo filter
-  // todo convert to byte
+  // todo convert to byte?
+  transmitFrame(name, outRange, MEASURES);
+}
+
+void transmitFrame(const char *name, const int16_t *outRange, size_t len) {
   HAL_Delay(100);
   uartTransmit("START\r\n");
   uartTransmit(name);
-  for (int i = 0; i < vLength; i++) {
+  for (int i = 0; i < len; i++) {
     char buf[50];
-    itoa(vRange[i], buf, 10);
+    itoa(outRange[i], buf, 10);
     uartTransmit("\r\n");
     uartTransmit(buf);
   }
   uartTransmit("\r\nEND\r\n");
 }
 
+int findAndSendCorrelation(char *name, const int16_t *calibRange, const int16_t *measureRange) {
+  static int16_t compare[2 * MEASURES];
+  arm_correlate_fast_q15((q15_t *) calibRange, MEASURES, (q15_t *) measureRange, MEASURES, compare);
+  q15_t max, min;
+  uint32_t maxIndex, minIndex;
+  arm_max_q15(compare, MEASURES * 2, &max, &maxIndex);
+  arm_min_q15(compare, MEASURES * 2, &min, &minIndex);
+  transmitFrame(name, &compare[3 * MEASURES / 4], MEASURES / 2);
+  return (int) (max > -min ? maxIndex : minIndex);
+}
 
 /* USER CODE END 0 */
 
@@ -119,6 +133,11 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+  static int16_t measureRange[MEASURES];
+  static int16_t calibRangeAB[MEASURES];
+  static int16_t calibRangeBA[MEASURES];
+  static int16_t calibRangeCD[MEASURES];
+  static int16_t calibRangeDC[MEASURES];
 
   /* USER CODE END 1 */
 
@@ -161,15 +180,33 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
+  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
+  HAL_Delay(700);
+  oneTrip("CH_AB", CH_AB, calibRangeAB);
+  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+  oneTrip("CH_BA", CH_BA, calibRangeBA);
+  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+  oneTrip("CH_CD", CH_CD, calibRangeCD);
+  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+  oneTrip("CH_DC", CH_DC, calibRangeDC);
+  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
   while (1)
   {
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-    oneTrip("CH_AB", CH_AB);
-    oneTrip("CH_BA", CH_BA);
-    oneTrip("CH_CD", CH_CD);
-    oneTrip("CH_DC", CH_DC);
+    HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+    oneTrip("CH_AB", CH_AB, measureRange);
+    int dAB = findAndSendCorrelation("CORR_AB", calibRangeAB, measureRange);
+    oneTrip("CH_BA", CH_BA, measureRange);
+    int dBA = findAndSendCorrelation("CORR_BA", calibRangeBA, measureRange);
+    oneTrip("CH_CD", CH_CD, measureRange);
+    int dCD = findAndSendCorrelation("CORR_CD", calibRangeCD, measureRange);
+    oneTrip("CH_DC", CH_DC, measureRange);
+    int dDC = findAndSendCorrelation("CORR_DC", calibRangeDC, measureRange);
+    char buff[100];
+    sprintf(buff, "START\r\nMSG:%d:%d | %d:%d\r\nEND\r\n", dAB, dBA, dCD, dDC);
+    uartTransmit(buff);
     HAL_Delay(300);
 
   }
