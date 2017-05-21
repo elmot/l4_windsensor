@@ -17,8 +17,8 @@
 #include "GPIOA.h"
 #include "GPIOB.h"
 
-#define MEASURE_SKIP_HEAD 3200
-#define MEASURES 2000
+#define MEASURE_SKIP_HEAD 4400
+#define MEASURES 2100
 
 #define SAMPLES (MEASURES + MEASURE_SKIP_HEAD)
 
@@ -30,5 +30,8 @@ typedef enum {
 } TRANSMIT_CHANNEL ;
 
 void runMeasurement(TRANSMIT_CHANNEL channel, short *signal);
+
+static const double ms_per_tick = 0.04;
+static char *const CALIBRED_SIGN = "CALIBRED";
 
 #endif //F3_WINDSENSOR_WINDSOUNDER_H_H

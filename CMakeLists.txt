@@ -10,9 +10,11 @@ file(GLOB_RECURSE STD_SOURCES
         "Drivers/**/*.h"
         "Drivers/**/*.c"
         "startup/*.s"
-        "DSP_Lib/Source/BasicMathFunctions/*.c"
-        "DSP_Lib/Source/StatisticsFunctions/*.c"
-        "DSP_Lib/Source/FilteringFunctions/*.c"
+        "DSP_Lib/Source/BasicMathFunctions/arm_offset_q15.c"
+        "DSP_Lib/Source/StatisticsFunctions/arm_max_q15.c"
+        "DSP_Lib/Source/StatisticsFunctions/arm_min_q15.c"
+        "DSP_Lib/Source/StatisticsFunctions/arm_mean_q15.c"
+        "DSP_Lib/Source/FilteringFunctions/arm_correlate_fast_q15.c"
         )
 #file(GLOB_RECURSE DSP_SOURCES "Drivers/CMSIS/DSP_Lib/Source/*/*.c")
 
@@ -22,7 +24,7 @@ include_directories(Drivers/CMSIS/DSP_Lib/Include)
 include_directories(Drivers/CMSIS/Device/ST/STM32L4xx/Include)
 include_directories(SVD_Inc)
 
-add_executable(${PROJECT_NAME}.elf ${USER_SOURCES} ${STD_SOURCES})
+add_executable(${PROJECT_NAME}.elf ${USER_SOURCES} ${STD_SOURCES} STM32L432KCUx_FLASH.cmake STM32L432KCUx_FLASH.ld)
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map")
 
