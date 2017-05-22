@@ -41,11 +41,8 @@
 
 /* USER CODE BEGIN Includes */
 #include <windsounder.h>
-#include <string.h>
 #include <stdlib.h>
-#include <arm_math.h>
 #include <errno.h>
-#include <stm32l4xx_hal_conf.h>
 
 /* USER CODE END Includes */
 
@@ -63,9 +60,8 @@ DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-int16_t values[SAMPLES];
-bool sendDetails = false;
 
+bool sendDetails = false;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -81,13 +77,10 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
-void transmitFrame(const char *name, const int16_t *outRange, size_t len);
-
-int findAndSendCorrelation(char *name, const int16_t *calibRange, const int16_t *measureRange);
-
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 
@@ -98,36 +91,7 @@ int *__errno(void) {
 
 #pragma clang diagnostic pop
 
-void uartTransmit(const char *str) { HAL_UART_Transmit(&huart2, (uint8_t *) str, (uint16_t) strlen(str), 20000); }
-
-
-void oneTrip(char *name, TRANSMIT_CHANNEL channel, const int16_t *outRange) {
-  runMeasurement(channel, values);
-  int16_t* vRange = &values[MEASURE_SKIP_HEAD];
-
-  q15_t avg;
-  arm_mean_q15(vRange, MEASURES, &avg);
-  arm_offset_q15(vRange, -avg, vRange, MEASURES);
-  // todo normalize?
-
-  transmitFrame(name, vRange, MEASURES);
-  if (outRange != NULL) {
-    uint32_t dstAddress = (uint32_t) outRange;
-    uint64_t *src = (uint64_t *) vRange;
-    int counter = MEASURES / 4;  // 8 bytes at the time
-    for (int i = 0; i < counter; i++, dstAddress += 8, src++) {
-      if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, dstAddress, *src) != HAL_OK) {
-        _Error_Handler(__FILE__ ": Flashing failed", __LINE__);
-      }
-    }
-    if (memcmp(vRange, outRange, MEASURES * 2) != 0) {
-      _Error_Handler(__FILE__ ": Flash check failed", __LINE__);
-    }
-
-  }
-}
-
-void transmitFrame(const char *name, const int16_t *outRange, size_t len) {
+void transmitFrame(const char *name, const q15_t *outRange, size_t len) {
   if (!sendDetails) return;
   uartTransmit("START\r\n");
   uartTransmit(name);
@@ -139,31 +103,6 @@ void transmitFrame(const char *name, const int16_t *outRange, size_t len) {
   }
   uartTransmit("\r\nEND\r\n");
 }
-
-int findAndSendCorrelation(char *name, const int16_t *calibRange, const int16_t *measureRange) {
-  static int16_t compare[2 * MEASURES - 1];
-  arm_correlate_fast_q15((q15_t *) calibRange, MEASURES, (q15_t *) measureRange, MEASURES, compare);
-  q15_t max, min;
-  uint32_t maxIndex, minIndex;
-  arm_max_q15(compare, MEASURES * 2 - 1, &max, &maxIndex);
-  arm_min_q15(compare, MEASURES * 2 - 1, &min, &minIndex);
-  transmitFrame(name, &compare[3 * MEASURES / 4], MEASURES / 2);
-  return (int) (max > -min ? maxIndex : minIndex);
-}
-
-int16_t measureRange[MEASURES];
-#pragma pack(push, FLASH_PAGE_SIZE)
-struct {
-    int16_t rangeAB[MEASURES]__attribute__ ((aligned (8)));
-    int16_t rangeBA[MEASURES]__attribute__ ((aligned (8)));
-    int16_t rangeCD[MEASURES]__attribute__ ((aligned (8)));
-    int16_t rangeDC[MEASURES]__attribute__ ((aligned (8)));
-    char sign[8] __attribute__ ((aligned (32)));
-    char span[FLASH_PAGE_SIZE - (4 * 2 * MEASURES + 8) % FLASH_PAGE_SIZE];
-} calibr __attribute__ ((section (".rodata"), aligned (FLASH_PAGE_SIZE)));
-
-
-#pragma pack(pop)
 
 bool isCalibrationJumperSet() {
   return HAL_GPIO_ReadPin(CALIBR_IN_GPIO_Port, CALIBR_IN_Pin) == GPIO_PIN_RESET;
@@ -216,49 +155,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   if (isCalibrationJumperSet()) {
-    sendDetails = true;
-    HAL_FLASH_Unlock();
-    FLASH_EraseInitTypeDef eraser = {
-            FLASH_TYPEERASE_PAGES,
-            FLASH_BANK_BOTH,
-            (((uint32_t) &calibr) - FLASH_BASE) / FLASH_PAGE_SIZE,
-            sizeof calibr / FLASH_PAGE_SIZE
-    };
-    uint32_t pageError;
-    HAL_FLASHEx_Erase(&eraser, &pageError);
-    if (pageError != -1) _Error_Handler(__FILE__ ": Erase error", __LINE__);
-
-    /* Todo calibrate*/
-    HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
-    HAL_Delay(700);
-    oneTrip("CH_AB", CH_AB, calibr.rangeAB);
-    HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-
-    oneTrip("CH_BA", CH_BA, calibr.rangeBA);
-    HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-    oneTrip("CH_CD", CH_CD, calibr.rangeCD);
-    HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-    oneTrip("CH_DC", CH_DC, calibr.rangeDC);
-    HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
-
-    HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t) calibr.sign, *(uint64_t *) CALIBRED_SIGN);
-    HAL_FLASH_Lock();
-    for (int i = 0; i <= 10; i++) {
-      HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
-      HAL_Delay(600);
-      HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
-      HAL_Delay(200);
-    }
+    calibrate();
   }
 
-  if (strncmp(CALIBRED_SIGN, calibr.sign, 8) != 0) {
-    _Error_Handler(__FILE__ ": uncalibrated", __LINE__);
-  }
+  checkCalibrated();
   /* Todo check if signal levels are ok*/
-  /* Todo check for detailed data*/
-  /* Todo send NMEA*/
-  /* Todo send NMEA checksum*/
-  /* Todo client: process NMEA*/
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
   while (1)
@@ -267,24 +168,10 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
     if(isCalibrationJumperSet()) sendDetails = true;
+//    sendDetails=false;
     HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-    oneTrip("CH_AB", CH_AB, measureRange);
-    int dAB = findAndSendCorrelation("CORR_AB", calibr.rangeAB, measureRange);
-    oneTrip("CH_BA", CH_BA, measureRange);
-    int dBA = findAndSendCorrelation("CORR_BA", calibr.rangeBA, measureRange);
-    oneTrip("CH_CD", CH_CD, measureRange);
-    int dCD = findAndSendCorrelation("CORR_CD", calibr.rangeCD, measureRange);
-    oneTrip("CH_DC", CH_DC, measureRange);
-    int dDC = findAndSendCorrelation("CORR_DC", calibr.rangeDC, measureRange);
-    char buff[100];
-    int dY = dCD - dDC;
-    int dX = dAB - dBA;
-    double angle = atan2(dY, dX) * 180.0 / PI;
-    if (angle < 0) angle += 360;
-    double speed = sqrt(dX * dX + dY * dY) * ms_per_tick;
+    performMeasurement();
 
-    sprintf(buff, "START\r\nMSG:%d:%d | %d:%d | %4.1f deg : %5.2f m/s\r\nEND\r\n", dAB, dBA, dCD, dDC, angle, speed);
-    uartTransmit(buff);
     HAL_Delay(100);
 
   }
@@ -499,6 +386,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
+//  huart2.Init.BaudRate = 115200;
   huart2.Init.BaudRate = 230400;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
@@ -600,6 +488,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(CALIBR_IN_GPIO_Port, &GPIO_InitStruct);
 
 }
+
+void uartTransmit(const char *str) { HAL_UART_Transmit(&huart2, (uint8_t *) str, (uint16_t) strlen(str), 20000); }
 
 /* USER CODE BEGIN 4 */
 

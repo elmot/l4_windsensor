@@ -11,10 +11,13 @@ file(GLOB_RECURSE STD_SOURCES
         "Drivers/**/*.c"
         "startup/*.s"
         "DSP_Lib/Source/BasicMathFunctions/arm_offset_q15.c"
+        "DSP_Lib/Source/SupportFunctions/*_q15.c"
         "DSP_Lib/Source/StatisticsFunctions/arm_max_q15.c"
         "DSP_Lib/Source/StatisticsFunctions/arm_min_q15.c"
         "DSP_Lib/Source/StatisticsFunctions/arm_mean_q15.c"
         "DSP_Lib/Source/FilteringFunctions/arm_correlate_fast_q15.c"
+        "DSP_Lib/Source/FilteringFunctions/arm_conv_fast_q15.c"
+        "DSP_Lib/Source/FilteringFunctions/arm_conv_partial_fast_q15.c"
         )
 #file(GLOB_RECURSE DSP_SOURCES "Drivers/CMSIS/DSP_Lib/Source/*/*.c")
 
