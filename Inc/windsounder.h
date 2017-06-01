@@ -18,8 +18,8 @@
 #include "GPIOA.h"
 #include "GPIOB.h"
 
-#define MEASURE_SKIP_HEAD 3800
-#define MEASURES 3000
+#define MEASURE_SKIP_HEAD 1000
+#define MEASURES 8600
 
 #define SAMPLES (MEASURES + MEASURE_SKIP_HEAD)
 

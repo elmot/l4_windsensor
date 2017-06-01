@@ -24,7 +24,7 @@ static const uint16_t send_pattern[] = {
 };
 #define send_sequence send_pattern
 
-q15_t values[SAMPLES + 320/*todo remove 340*/];
+q15_t values[SAMPLES];
 q15_t *mRange = &values[MEASURE_SKIP_HEAD];//todo remove if not needed
 q15_t vRange[MEASURES];
 
@@ -73,7 +73,7 @@ void runMeasurement(TRANSMIT_CHANNEL channel, q15_t *signal) {
   }
   HAL_DMA_Start(&hdma_tim2_up, (uint32_t) send_sequence, (uint32_t) &CODE_M_GPIO_Port->ODR,
                 sizeof send_sequence / sizeof send_sequence[0]);
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t *) signal, SAMPLES + 320/*todo remove 340*/);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t *) signal, SAMPLES);
   HAL_TIM_Base_Start(&htim1);
   HAL_SuspendTick();
   HAL_DMA_PollForTransfer(&hdma_tim2_up, HAL_DMA_FULL_TRANSFER, 2000);
@@ -92,11 +92,6 @@ void oneTrip(char *name, TRANSMIT_CHANNEL channel, q15_t *outRange, bool rev) {
   runMeasurement(channel, values);
 
   q15_t avg;
-  if(rangeTest) {
-    static q15_t tmp[MEASURES];
-    arm_copy_q15(&mRange[40], tmp, MEASURES);//todo remove
-    arm_copy_q15(tmp, mRange, MEASURES);//todo remove
-  }
   arm_mean_q15(mRange, MEASURES, &avg);
   if (rev) {
     for (int i = 0; i < MEASURES; i++) {
@@ -123,19 +118,19 @@ void oneTrip(char *name, TRANSMIT_CHANNEL channel, q15_t *outRange, bool rev) {
 }
 
 int findAndSendCorrelation(char *name, q15_t *calibRange, q15_t *measureRange) {
-  static q15_t compare[2 * MEASURES - 1];
-  static q15_t temp_calib[MEASURES];
-  arm_copy_q15(calibRange, temp_calib, MEASURES);
-
+//  static q15_t compare[2 * MEASURES - 1];
+//  static q15_t temp_calib[MEASURES];
+//  arm_copy_q15(calibRange, temp_calib, MEASURES);
+//
 //  arm_conv_partial_fast_q15(calibRange, MEASURES , measureRange, MEASURES, compare,
 //                            CONVOLUTION_START, CONVOLUTION_LEN);
-  arm_conv_partial_fast_q15(temp_calib, MEASURES , measureRange, MEASURES, compare,
-                            CONVOLUTION_START, CONVOLUTION_LEN);
+//  arm_conv_partial_fast_q15(temp_calib, MEASURES , measureRange, MEASURES, compare,
+//                            CONVOLUTION_START, CONVOLUTION_LEN);
   q15_t max, min;
   uint32_t maxIndex, minIndex;
-  arm_max_q15(&compare[CONVOLUTION_START], CONVOLUTION_LEN, &max, &maxIndex);
-  arm_min_q15(&compare[CONVOLUTION_START], CONVOLUTION_LEN, &min, &minIndex);
-  transmitFrame(name, &compare[CONVOLUTION_START], CONVOLUTION_LEN);
+//  arm_max_q15(&compare[CONVOLUTION_START], CONVOLUTION_LEN, &max, &maxIndex);
+//  arm_min_q15(&compare[CONVOLUTION_START], CONVOLUTION_LEN, &min, &minIndex);
+//  transmitFrame(name, &compare[CONVOLUTION_START], CONVOLUTION_LEN);
   return CONVOLUTION_START +  (int)(max > -min ? maxIndex : minIndex);
 }
 
